@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Settings, Calendar as CalendarIcon, Save } from "lucide-react";
+import { Settings, Calendar as CalendarIcon, Save, Cloud, Loader2 } from "lucide-react";
+import { getDashboardData, saveDashboardData, type CheckmateData } from "@/lib/checkmateService";
 
 // --- Types ---
 
@@ -190,19 +191,38 @@ export default function CheckmatePage() {
 
     // --- Persistence Logic ---
 
-    // Load from LocalStorage
+    // --- Persistence Logic ---
+
+    const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | 'unsaved'>('saved');
+
+    // Load from Supabase (Primary) or LocalStorage (Fallback)
     useEffect(() => {
-        const savedData = localStorage.getItem("checkmate_v2_data");
-        if (savedData) {
-            try {
-                const parsed = JSON.parse(savedData);
+        const loadData = async () => {
+            setIsInitialized(false);
+
+            // Try fetching from Supabase
+            const cloudData = await getDashboardData();
+
+            let parsed: any = cloudData;
+
+            if (!parsed) {
+                // Fallback to local storage if no cloud data
+                const localData = localStorage.getItem("checkmate_v2_data");
+                if (localData) {
+                    try {
+                        parsed = JSON.parse(localData);
+                    } catch (e) {
+                        console.error("Failed to parse local data", e);
+                    }
+                }
+            }
+
+            if (parsed) {
                 if (parsed.userCount) setUserCount(parsed.userCount);
                 if (parsed.checkItemCount) setCheckItemCount(parsed.checkItemCount);
                 if (parsed.checkLabels) setCheckLabels(parsed.checkLabels);
                 if (parsed.checkWeeklyCount) setCheckWeeklyCount(parsed.checkWeeklyCount);
-                // Load Main Weekly Goal
                 if (parsed.mainWeeklyGoal) setMainWeeklyGoal(parsed.mainWeeklyGoal);
-
                 if (parsed.isSettingsLocked !== undefined) setIsSettingsLocked(parsed.isSettingsLocked);
                 if (parsed.isUserInfoLocked !== undefined) setIsUserInfoLocked(parsed.isUserInfoLocked);
                 if (parsed.mates) setMates(parsed.mates);
@@ -216,35 +236,46 @@ export default function CheckmatePage() {
                 }
                 if (parsed.bankInfo) setBankInfo(parsed.bankInfo);
                 if (parsed.fineNotice) setFineNotice(parsed.fineNotice);
-            } catch (e) {
-                console.error("Failed to load data", e);
             }
-        }
-        setIsInitialized(true);
+            setIsInitialized(true);
+        };
+
+        loadData();
     }, []);
 
-    // Save to LocalStorage
+    // Save to Supabase (Debounced)
     useEffect(() => {
         if (!isInitialized) return;
 
-        const updatedHistory = { ...dailyHistory, [selectedDate]: progressRecords };
+        setSaveStatus('unsaved');
+        const timer = setTimeout(async () => {
+            setSaveStatus('saving');
+            const updatedHistory = { ...dailyHistory, [selectedDate]: progressRecords };
 
-        const dataToSave = {
-            userCount,
-            checkItemCount,
-            checkLabels,
-            checkWeeklyCount,
-            mainWeeklyGoal, // Save goal
-            isSettingsLocked,
-            isUserInfoLocked,
-            mates,
-            fineRecords,
-            dailyHistory: updatedHistory,
-            bankInfo,
-            fineNotice,
-        };
+            const dataToSave: CheckmateData = {
+                userCount,
+                checkItemCount,
+                checkLabels,
+                checkWeeklyCount,
+                mainWeeklyGoal,
+                isSettingsLocked,
+                isUserInfoLocked,
+                mates,
+                fineRecords,
+                dailyHistory: updatedHistory,
+                bankInfo,
+                fineNotice,
+            };
 
-        localStorage.setItem("checkmate_v2_data", JSON.stringify(dataToSave));
+            // Save to LocalStorage as backup
+            localStorage.setItem("checkmate_v2_data", JSON.stringify(dataToSave));
+
+            // Save to Supabase
+            const success = await saveDashboardData(dataToSave);
+            setSaveStatus(success ? 'saved' : 'error');
+        }, 1500); // 1.5s debounce
+
+        return () => clearTimeout(timer);
     }, [
         userCount, checkItemCount, checkLabels, checkWeeklyCount, mainWeeklyGoal, isSettingsLocked, isUserInfoLocked,
         mates, fineRecords, progressRecords, selectedDate, bankInfo, fineNotice, isInitialized
@@ -544,6 +575,13 @@ export default function CheckmatePage() {
                     </h1>
                     <p className="text-muted-foreground mt-1 text-sm">
                         오늘의 진행 상황을 확인하고 기록하세요
+                        {/* Status Indicator */}
+                        <span className="ml-4 inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-muted/50 border border-border">
+                            {saveStatus === 'saving' && <><Loader2 className="w-3 h-3 animate-spin text-blue-500" /> 저장 중...</>}
+                            {saveStatus === 'saved' && <><Cloud className="w-3 h-3 text-emerald-500" /> 저장됨</>}
+                            {saveStatus === 'unsaved' && <><span className="w-2 h-2 rounded-full bg-amber-500" /> 변경사항 있음</>}
+                            {saveStatus === 'error' && <><span className="w-2 h-2 rounded-full bg-red-500" /> 저장 실패</>}
+                        </span>
                     </p>
                 </div>
                 <div className="flex gap-2">
