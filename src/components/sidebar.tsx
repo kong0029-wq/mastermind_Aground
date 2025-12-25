@@ -14,13 +14,13 @@ interface SidebarProps {
 }
 
 const menuItems = [
-    { href: "/", label: "홈", icon: Home },
-    { href: "/notice", label: "정보&공지사항", icon: Bell },
+    // { href: "/", label: "홈", icon: Home },
+    // { href: "/notice", label: "정보&공지사항", icon: Bell },
     { href: "/checkmate", label: "체크메이트", icon: CheckSquare },
-    { href: "/peer-learning", label: "컨텐츠 피어러닝", icon: Users },
-    { href: "/journaling", label: "스탠퍼드 저널링", icon: BookOpen },
-    { href: "/schedule", label: "스탠퍼드 일정표", icon: Calendar },
-    { href: "/mission", label: "스탠퍼드 임무표", icon: ClipboardList },
+    // { href: "/peer-learning", label: "컨텐츠 피어러닝", icon: Users },
+    // { href: "/journaling", label: "스탠퍼드 저널링", icon: BookOpen },
+    // { href: "/schedule", label: "스탠퍼드 일정표", icon: Calendar },
+    // { href: "/mission", label: "스탠퍼드 임무표", icon: ClipboardList },
 ];
 
 function NavItems({ onItemClick }: { onItemClick?: () => void }) {
@@ -41,7 +41,8 @@ function NavItems({ onItemClick }: { onItemClick?: () => void }) {
                             "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
                             isActive
                                 ? "bg-primary text-primary-foreground"
-                                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                                : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                            (item as any).disabled && "opacity-50 pointer-events-none cursor-not-allowed"
                         )}
                     >
                         <Icon className="w-5 h-5" />
@@ -73,7 +74,7 @@ export function Sidebar({ children }: SidebarProps) {
                             <SheetTitle className="sr-only">메뉴</SheetTitle>
                             <div className="flex flex-col h-full">
                                 <div className="flex items-center justify-between h-16 px-4 border-b border-border">
-                                    <span className="text-xl font-bold">🎯 체크메이트</span>
+                                    <span className="text-xl font-bold">🎯 Aground Mastermind</span>
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -88,7 +89,7 @@ export function Sidebar({ children }: SidebarProps) {
                             </div>
                         </SheetContent>
                     </Sheet>
-                    <span className="text-lg font-bold">🎯 체크메이트</span>
+                    <span className="text-lg font-bold">🎯 Aground Mastermind</span>
                 </div>
                 <ThemeToggle />
             </header>
@@ -102,7 +103,7 @@ export function Sidebar({ children }: SidebarProps) {
             >
                 <div className="flex items-center justify-between h-16 px-4 border-b border-border">
                     {!isCollapsed && (
-                        <span className="text-xl font-bold">🎯 체크메이트</span>
+                        <span className="text-xl font-bold">🎯 Aground Mastermind</span>
                     )}
                     <Button
                         variant="ghost"
@@ -122,7 +123,10 @@ export function Sidebar({ children }: SidebarProps) {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className="p-3 rounded-lg hover:bg-muted transition-colors"
+                                        className={cn(
+                                            "p-3 rounded-lg hover:bg-muted transition-colors",
+                                            (item as any).disabled && "opacity-50 pointer-events-none cursor-not-allowed"
+                                        )}
                                         title={item.label}
                                     >
                                         <Icon className="w-5 h-5" />

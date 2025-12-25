@@ -11,8 +11,8 @@ const nanumGothic = Nanum_Gothic({
 });
 
 export const metadata: Metadata = {
-  title: "체크메이트 - 습관 추적 관리",
-  description: "메이트들과 함께하는 습관 추적 관리 시스템",
+  title: "Aground Mastermind",
+  description: "Aground Mastermind - 습관 추적 및 목표 달성 시스템",
 };
 
 export default function RootLayout({
