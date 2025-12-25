@@ -281,7 +281,7 @@ export default function CheckmatePage() {
     const [allowPastDateEdit, setAllowPastDateEdit] = useState(false);
     // [FIX] Use KST (Korea Standard Time) for today's date
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
-    const displayDate = allowPastDateEdit ? selectedDate : today;
+    const displayDate = selectedDate;
 
 
     // --- Persistence Logic ---
@@ -485,23 +485,17 @@ export default function CheckmatePage() {
 
     // 날짜 변경 핸들러
     const handleDateChange = (newDate: string) => {
-        // Save current view based on current mode
-        const currentDisplayDate = allowPastDateEdit ? selectedDate : today;
-
-        const updatedMateHistory = { ...mateHistory, [currentDisplayDate]: currentMateRecords };
-        const updatedHabitHistory = { ...habitHistory, [currentDisplayDate]: currentHabitRecords };
+        // Save current view
+        const updatedMateHistory = { ...mateHistory, [selectedDate]: currentMateRecords };
+        const updatedHabitHistory = { ...habitHistory, [selectedDate]: currentHabitRecords };
 
         setMateHistory(updatedMateHistory);
         setHabitHistory(updatedHabitHistory);
 
         setSelectedDate(newDate);
 
-        // Only load new data if we are in admin mode (following selected date)
-        // or if somehow we weren't on today (but logic enforces today if !allowed)
-        if (allowPastDateEdit) {
-            loadDailyData(newDate, updatedMateHistory, updatedHabitHistory);
-        }
-        // If !allowPastDateEdit, displayDate remains 'today', and data remains 'today's data.
+        // Always load new data
+        loadDailyData(newDate, updatedMateHistory, updatedHabitHistory);
     };
 
 
@@ -1194,11 +1188,11 @@ export default function CheckmatePage() {
                                         <td onClick={() => { setSelectedMateIndex(index); setShowMateDetailModal(true); }} className="border border-border px-3 py-2 text-center font-medium bg-muted/20 text-black dark:text-white cursor-pointer hover:text-blue-500 hover:underline">{mates[index]?.name}</td>
                                         {record.customChecks.slice(0, checkItemCount).map((check, checkIdx) => (
                                             <td key={check.id} className="border border-border px-2 py-2 text-center bg-emerald-500/5">
-                                                <input type="checkbox" checked={check.checked} onChange={e => updateCustomCheck(index, checkIdx, e.target.checked)} disabled={!allowPastDateEdit && selectedDate !== new Date().toISOString().split('T')[0]} className="w-5 h-5 accent-emerald-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" />
+                                                <input type="checkbox" checked={check.checked} onChange={e => updateCustomCheck(index, checkIdx, e.target.checked)} disabled={!allowPastDateEdit && selectedDate !== today} className="w-5 h-5 accent-emerald-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" />
                                             </td>
                                         ))}
                                         <td className="border border-border px-2 py-2">
-                                            <input type="text" value={record.note} onChange={e => updateHabitRecord(index, "note", e.target.value)} className="w-full p-1 text-sm rounded border bg-background" placeholder="메모..." />
+                                            <input type="text" value={record.note} onChange={e => updateHabitRecord(index, "note", e.target.value)} disabled={!allowPastDateEdit && selectedDate !== today} className="w-full p-1 text-sm rounded border bg-background disabled:opacity-50 disabled:bg-muted" placeholder="메모..." />
                                         </td>
                                     </tr>
                                 )
