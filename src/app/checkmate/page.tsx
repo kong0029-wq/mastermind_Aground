@@ -892,7 +892,7 @@ export default function CheckmatePage() {
             <header className="mb-6 flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-500 to-emerald-500 bg-clip-text text-transparent">
-                        Aground Mastermind
+                        체크메이트
                     </h1>
                     <p className="text-muted-foreground mt-1 text-sm">
                         오늘의 진행 상황을 확인하고 기록하세요
