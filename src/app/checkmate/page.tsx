@@ -280,6 +280,8 @@ export default function CheckmatePage() {
     const [isFineSectionLocked, setIsFineSectionLocked] = useState(true);
     const [modalScale, setModalScale] = useState(1.0);
     const [allowPastDateEdit, setAllowPastDateEdit] = useState(false);
+    const today = new Date().toISOString().split("T")[0];
+    const displayDate = allowPastDateEdit ? selectedDate : today;
 
 
     // --- Persistence Logic ---
@@ -438,29 +440,18 @@ export default function CheckmatePage() {
         return fineRecords.reduce((sum, record) => sum + (record.amount || 0), 0);
     }, [fineRecords]);
 
-    // 날짜 변경 핸들러
-    const handleDateChange = (newDate: string) => {
-        // Save current view to history before switching
-        const updatedMateHistory = { ...mateHistory, [selectedDate]: currentMateRecords };
-        const updatedHabitHistory = { ...habitHistory, [selectedDate]: currentHabitRecords };
-
-        setMateHistory(updatedMateHistory);
-        setHabitHistory(updatedHabitHistory);
-
-        setSelectedDate(newDate);
-
-        // Load or Initialize Mate Records for New Date
-        if (updatedMateHistory[newDate]) {
-            setCurrentMateRecords(updatedMateHistory[newDate]);
+    // Common Logic to Load Data for a Date
+    const loadDailyData = (targetDate: string, _mateHistory: any, _habitHistory: any) => {
+        // Load or Initialize Mate Records
+        if (_mateHistory[targetDate]) {
+            setCurrentMateRecords(_mateHistory[targetDate]);
         } else {
-            // New Mate Records (Fixed 4 Rows)
-            const weekNumber = getWeekNumber(new Date(newDate));
-            const yearSeed = new Date(newDate).getFullYear() * 100 + weekNumber;
-            // [FIX] Use generateRandomPairs for Caller & Partner
+            const weekNumber = getWeekNumber(new Date(targetDate));
+            const yearSeed = new Date(targetDate).getFullYear() * 100 + weekNumber;
             const matching = generateRandomPairs(4, userCount, yearSeed);
 
-            const newMates = Array.from({ length: 4 }, (_, i) => ({ // Fixed 4
-                mateId: String(i + 1), // Numeric IDs 1-4
+            const newMates = Array.from({ length: 4 }, (_, i) => ({
+                mateId: String(i + 1),
                 mateName: "",
                 mateCallPartner: "",
                 progressCheck: false
@@ -468,23 +459,15 @@ export default function CheckmatePage() {
 
             for (let i = 0; i < 4; i++) {
                 const { callerIdx, partnerIdx } = matching[i];
-
-                // 1. Set Caller (Random)
-                if (callerIdx >= 0 && callerIdx < userCount && mates[callerIdx]) {
-                    newMates[i].mateName = mates[callerIdx].name;
-                }
-
-                // 2. Set Partner (Random)
-                if (partnerIdx >= 0 && partnerIdx < userCount && mates[partnerIdx]) {
-                    newMates[i].mateCallPartner = mates[partnerIdx].name || `메이트 ${String.fromCharCode(65 + partnerIdx)}`;
-                }
+                if (callerIdx >= 0 && callerIdx < userCount && mates[callerIdx]) newMates[i].mateName = mates[callerIdx].name;
+                if (partnerIdx >= 0 && partnerIdx < userCount && mates[partnerIdx]) newMates[i].mateCallPartner = mates[partnerIdx].name || `메이트 ${String.fromCharCode(65 + partnerIdx)}`;
             }
             setCurrentMateRecords(newMates);
         }
 
-        // Load or Initialize Habit Records for New Date
-        if (updatedHabitHistory[newDate]) {
-            setCurrentHabitRecords(updatedHabitHistory[newDate]);
+        // Load or Initialize Habit Records
+        if (_habitHistory[targetDate]) {
+            setCurrentHabitRecords(_habitHistory[targetDate]);
         } else {
             const newHabits = Array.from({ length: 10 }, (_, i) => ({
                 mateId: String.fromCharCode(65 + i),
@@ -499,6 +482,28 @@ export default function CheckmatePage() {
             setCurrentHabitRecords(newHabits);
         }
     };
+
+    // 날짜 변경 핸들러
+    const handleDateChange = (newDate: string) => {
+        // Save current view based on current mode
+        const currentDisplayDate = allowPastDateEdit ? selectedDate : today;
+
+        const updatedMateHistory = { ...mateHistory, [currentDisplayDate]: currentMateRecords };
+        const updatedHabitHistory = { ...habitHistory, [currentDisplayDate]: currentHabitRecords };
+
+        setMateHistory(updatedMateHistory);
+        setHabitHistory(updatedHabitHistory);
+
+        setSelectedDate(newDate);
+
+        // Only load new data if we are in admin mode (following selected date)
+        // or if somehow we weren't on today (but logic enforces today if !allowed)
+        if (allowPastDateEdit) {
+            loadDailyData(newDate, updatedMateHistory, updatedHabitHistory);
+        }
+        // If !allowPastDateEdit, displayDate remains 'today', and data remains 'today's data.
+    };
+
 
     const applyRandomMatching = () => {
         const weekNumber = getWeekNumber(new Date(selectedDate)); // [FIX] Restore weekNumber
@@ -613,7 +618,7 @@ export default function CheckmatePage() {
         const newRecords = [...currentMateRecords];
         newRecords[index] = { ...newRecords[index], [field]: value };
         setCurrentMateRecords(newRecords);
-        setMateHistory(prev => ({ ...prev, [selectedDate]: newRecords }));
+        setMateHistory(prev => ({ ...prev, [displayDate]: newRecords }));
     };
 
     // Renamed & Split: Update Habit Record (Note)
@@ -621,7 +626,7 @@ export default function CheckmatePage() {
         const newRecords = [...currentHabitRecords];
         newRecords[index] = { ...newRecords[index], [field]: value };
         setCurrentHabitRecords(newRecords);
-        setHabitHistory(prev => ({ ...prev, [selectedDate]: newRecords }));
+        setHabitHistory(prev => ({ ...prev, [displayDate]: newRecords }));
     };
 
     const updateCustomCheck = (mateIndex: number, checkIndex: number, checked: boolean) => {
@@ -630,16 +635,16 @@ export default function CheckmatePage() {
         newChecks[checkIndex] = { ...newChecks[checkIndex], checked };
         newRecords[mateIndex] = { ...newRecords[mateIndex], customChecks: newChecks };
         setCurrentHabitRecords(newRecords);
-        setHabitHistory(prev => ({ ...prev, [selectedDate]: newRecords }));
+        setHabitHistory(prev => ({ ...prev, [displayDate]: newRecords }));
     };
 
     const toggleWeeklyMateCheck = (index: number, dateStr: string) => {
-        if (dateStr === selectedDate) {
+        if (dateStr === displayDate) {
             const newRecords = [...currentMateRecords];
             if (newRecords[index]) {
                 newRecords[index] = { ...newRecords[index], progressCheck: !newRecords[index].progressCheck };
                 setCurrentMateRecords(newRecords);
-                setMateHistory(prev => ({ ...prev, [selectedDate]: newRecords }));
+                setMateHistory(prev => ({ ...prev, [displayDate]: newRecords }));
             }
         } else {
             setMateHistory(prev => {
@@ -880,12 +885,14 @@ export default function CheckmatePage() {
         );
     };
 
+
+
     return (
         <div className="min-h-screen p-4 md:p-8 bg-background">
             <header className="mb-6 flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-500 to-emerald-500 bg-clip-text text-transparent">
-                        🎯 체크메이트
+                        Aground Mastermind
                     </h1>
                     <p className="text-muted-foreground mt-1 text-sm">
                         오늘의 진행 상황을 확인하고 기록하세요
@@ -1059,7 +1066,7 @@ export default function CheckmatePage() {
                                     };
                                     return (
                                         <th className="border border-border px-3 py-2 text-center text-sm font-semibold w-[25%]">
-                                            {formatHeaderDate(selectedDate)}
+                                            {formatHeaderDate(displayDate)}
                                         </th>
                                     );
                                 })()}
@@ -1098,17 +1105,16 @@ export default function CheckmatePage() {
                                                 placeholder="직접 입력"
                                             />
                                         </td>
-                                        {/* Selected Date's Check */}
+                                        {/* Display Date's Check */}
                                         {(() => {
-                                            const todayStr = new Date().toISOString().split('T')[0];
-                                            const isChecked = mateHistory[selectedDate]?.[index]?.progressCheck || false;
+                                            const isChecked = record.progressCheck || false;
                                             return (
                                                 <td className="border border-border px-3 py-2 text-center">
                                                     <input
                                                         type="checkbox"
                                                         checked={isChecked}
-                                                        onChange={() => toggleWeeklyMateCheck(index, selectedDate)}
-                                                        disabled={!allowPastDateEdit && selectedDate !== todayStr}
+                                                        onChange={() => toggleWeeklyMateCheck(index, displayDate)}
+                                                        disabled={!allowPastDateEdit && displayDate !== today}
                                                         className="w-5 h-5 accent-blue-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                                     />
                                                 </td>
@@ -1130,7 +1136,7 @@ export default function CheckmatePage() {
                             <span className="text-2xl">✅</span>
                             습관 체크 현황
                             <span className="text-base font-normal text-muted-foreground ml-2">
-                                ({formatDate(getMondayOfWeek(new Date(selectedDate)))} ~ {formatDate(new Date(getMondayOfWeek(new Date(selectedDate)).getTime() + 6 * 24 * 60 * 60 * 1000))})
+                                ({formatDate(getMondayOfWeek(new Date(displayDate)))} ~ {formatDate(new Date(getMondayOfWeek(new Date(displayDate)).getTime() + 6 * 24 * 60 * 60 * 1000))})
                             </span>
                         </h2>
                         <button
@@ -1642,7 +1648,23 @@ export default function CheckmatePage() {
                                                         <span className="text-sm font-medium">과거 날짜 수정 허용</span>
                                                     </div>
                                                     <button
-                                                        onClick={() => setAllowPastDateEdit(!allowPastDateEdit)}
+                                                        onClick={() => {
+                                                            const nextState = !allowPastDateEdit;
+
+                                                            // Save current
+                                                            const currentDisplayDate = allowPastDateEdit ? selectedDate : today;
+                                                            const updatedMateHistory = { ...mateHistory, [currentDisplayDate]: currentMateRecords };
+                                                            const updatedHabitHistory = { ...habitHistory, [currentDisplayDate]: currentHabitRecords };
+
+                                                            setMateHistory(updatedMateHistory);
+                                                            setHabitHistory(updatedHabitHistory);
+
+                                                            setAllowPastDateEdit(nextState);
+
+                                                            // Load next
+                                                            const nextDisplayDate = nextState ? selectedDate : today;
+                                                            loadDailyData(nextDisplayDate, updatedMateHistory, updatedHabitHistory);
+                                                        }}
                                                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${allowPastDateEdit ? 'bg-green-500' : 'bg-input'}`}
                                                     >
                                                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${allowPastDateEdit ? 'translate-x-6' : 'translate-x-1'}`} />
