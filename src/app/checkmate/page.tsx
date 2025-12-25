@@ -303,7 +303,7 @@ export default function CheckmatePage() {
                     try {
                         parsed = JSON.parse(localData);
                     } catch (e) {
-                        console.error("Failed to parse local data", e);
+                        // Failed to parse local data
                     }
                 }
             }

@@ -57,14 +57,12 @@ export const getDashboardData = async (): Promise<CheckmateData | null> => {
             .single();
 
         if (error) {
-            console.error('Error fetching dashboard data:', error);
             // If row doesn't exist (initial state), try creating it or return null
             return null;
         }
 
         return data?.content || null;
     } catch (err) {
-        console.error('Unexpected error fetching data:', err);
         return null;
     }
 };
@@ -101,7 +99,6 @@ export const saveDashboardData = async (data: CheckmateData): Promise<boolean> =
 
         return true;
     } catch (err) {
-        console.error('Error saving dashboard data:', err);
         return false;
     }
 };
