@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,52683,e=>{"use strict";var t=e.i(43476),i=e.i(71645),u=e.i(18566);function c(){let e=(0,u.useRouter)();return(0,i.useEffect)(()=>{e.push("/checkmate")},[e]),(0,t.jsx)("div",{children:"Mastermind Loading..."})}e.s(["default",()=>c])}]);
