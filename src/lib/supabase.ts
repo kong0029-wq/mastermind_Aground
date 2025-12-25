@@ -1,9 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 환경 변수가 없으면 빌드 에러를 막기 위해 '임시 값(placeholder)'을 넣어줍니다.
-// 이 '임시 값'은 배포 과정(Build)만 통과시켜 주고, 
-// 실제 사이트가 작동할 때는 아까 설정하신 진짜 환경 변수가 자동으로 들어와서 작동합니다.
+// 1. 환경 변수가 있으면 그것을 쓰고
+// 2. 없으면(빌드 중일 때) 임시 값("https://placeholder...")을 써서 에러를 막습니다.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
 
+// 이 설정 덕분에 빌드할 때는 가짜 열쇠로 통과하고, 
+// 실제 사이트에서는 진짜 열쇠로 작동하게 됩니다.
 export const supabase = createClient(supabaseUrl, supabaseKey);
