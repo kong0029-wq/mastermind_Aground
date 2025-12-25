@@ -1,5 +1,14 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  redirect("/checkmate");
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/checkmate");
+  }, [router]);
+
+  return <div>Mastermind Loading...</div>;
 }
