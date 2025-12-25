@@ -4,9 +4,6 @@ import { Settings, Calendar as CalendarIcon, Save, Cloud, Loader2, Lock, Unlock,
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { getDashboardData, saveDashboardData, resetDashboardData, type CheckmateData } from "@/lib/checkmateService";
 
-// ... inside CheckMatePage component ...
-
-
 // --- Types ---
 
 interface MateInfo {
@@ -331,7 +328,6 @@ export default function CheckmatePage() {
 
                 // Move legacy dailyHistory to new separate histories if needed
                 if (parsed.dailyHistory && Object.keys(loadedMateHistory).length === 0 && Object.keys(loadedHabitHistory).length === 0) {
-                    console.log("Migrating legacy dailyHistory...");
                     Object.entries(parsed.dailyHistory).forEach(([date, records]: [string, any]) => {
                         loadedMateHistory[date] = records.map((r: any) => ({
                             mateId: r.mateId,
