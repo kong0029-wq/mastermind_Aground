@@ -1,7 +1,7 @@
 "use client";
 
 import { Settings, Calendar as CalendarIcon, Save, Cloud, Loader2, Lock, Unlock, ArrowRight, UserCog, RotateCcw } from "lucide-react";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { getDashboardData, saveDashboardData, resetDashboardData, type CheckmateData } from "@/lib/checkmateService";
 
 // --- Types ---
@@ -1752,7 +1752,7 @@ export default function CheckmatePage() {
                 showWeeklyHabitModal && (
                     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-auto">
                         <div
-                            className="bg-card rounded-2xl shadow-xl w-full p-6 transition-all duration-200"
+                            className="bg-card rounded-2xl shadow-xl w-full p-4 max-h-[85vh] overflow-y-auto transition-all duration-200"
                             style={{ maxWidth: `${48 * habitModalScale}rem`, width: '100%' }}
                         >
                             <div className="flex justify-between items-center mb-4">
@@ -1783,10 +1783,10 @@ export default function CheckmatePage() {
                                 <table className="w-full border-collapse text-xs">
                                     <thead>
                                         <tr className="bg-muted/50">
-                                            <th className="border p-1 text-left min-w-[70px] text-xs">날짜</th>
-                                            <th className="border p-1 text-left min-w-[100px] text-xs">체크 항목</th>
+                                            <th className="border py-0.5 px-1 text-left min-w-[70px] text-xs">날짜</th>
+                                            <th className="border py-0.5 px-1 text-left min-w-[100px] text-xs">체크 항목</th>
                                             {mates.slice(0, userCount).map((mate) => (
-                                                <th key={mate.id} className="border p-1 text-center min-w-[70px] text-xs">
+                                                <th key={mate.id} className="border py-0.5 px-1 text-center min-w-[70px] text-xs">
                                                     {mate.name}
                                                 </th>
                                             ))}
@@ -1800,18 +1800,18 @@ export default function CheckmatePage() {
                                             const isToday = dateStr === new Date().toISOString().split('T')[0];
 
                                             return (
-                                                <>
+                                                <React.Fragment key={dateStr}>
                                                     {checkLabels.slice(0, checkItemCount).map((label, checkIdx) => (
-                                                        <tr key={`${dateStr}-${checkIdx}`} className={`hover:bg-muted/30 h-8 ${isToday ? 'bg-emerald-50 dark:bg-emerald-900/10' : ''}`}>
+                                                        <tr key={`${dateStr}-${checkIdx}`} className={`hover:bg-muted/30 h-6 ${isToday ? 'bg-emerald-50 dark:bg-emerald-900/10' : ''}`}>
                                                             {checkIdx === 0 && (
-                                                                <td className="border p-1 font-medium text-xs" rowSpan={checkItemCount}>
+                                                                <td className="border py-0.5 px-1 font-medium text-xs" rowSpan={checkItemCount}>
                                                                     <div>{dayName}</div>
                                                                     <div className="text-[10px] text-muted-foreground">
                                                                         {date.getMonth() + 1}/{date.getDate()}
                                                                     </div>
                                                                 </td>
                                                             )}
-                                                            <td className="border p-1 text-xs text-muted-foreground pl-4">
+                                                            <td className="border py-0.5 px-1 text-xs text-muted-foreground pl-4">
                                                                 {label}
                                                             </td>
                                                             {mates.slice(0, userCount).map((mate, mateIdx) => {
@@ -1819,7 +1819,7 @@ export default function CheckmatePage() {
                                                                 const isChecked = dayData?.customChecks[checkIdx]?.checked || false;
 
                                                                 return (
-                                                                    <td key={mate.id} className="border p-1 text-center">
+                                                                    <td key={mate.id} className="border py-0.5 px-1 text-center">
                                                                         {isChecked ? (
                                                                             <span className="text-emerald-500 text-lg">✓</span>
                                                                         ) : (
@@ -1830,7 +1830,7 @@ export default function CheckmatePage() {
                                                             })}
                                                         </tr>
                                                     ))}
-                                                </>
+                                                </React.Fragment>
                                             );
                                         })}
                                     </tbody>
