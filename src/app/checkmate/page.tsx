@@ -192,9 +192,8 @@ const getDatesOfWeek = (currentDate: string): string[] => {
 export default function CheckmatePage() {
     // 1. Core State
     const [isInitialized, setIsInitialized] = useState<boolean>(false);
-    const [selectedDate, setSelectedDate] = useState<string>(
-        new Date().toISOString().split("T")[0]
-    );
+    // [FIX] Initialize with KST
+    const [selectedDate, setSelectedDate] = useState(() => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }));
 
     // 2. Settings State
     const [userCount, setUserCount] = useState<number>(3);
@@ -280,7 +279,8 @@ export default function CheckmatePage() {
     const [isFineSectionLocked, setIsFineSectionLocked] = useState(true);
     const [modalScale, setModalScale] = useState(1.0);
     const [allowPastDateEdit, setAllowPastDateEdit] = useState(false);
-    const today = new Date().toISOString().split("T")[0];
+    // [FIX] Use KST (Korea Standard Time) for today's date
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });
     const displayDate = allowPastDateEdit ? selectedDate : today;
 
 
